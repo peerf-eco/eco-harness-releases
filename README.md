@@ -269,9 +269,10 @@ The WebSocket path is `/ws/chat`. New code should use the neutral
 - `eco_package` (the `eco-package` binary) for marketplace discovery and component downloads
 - `eco-wizard` for generated project/component structure
 - Optional external sub-agents installed on `PATH`:
-  - `codex -p "prompt"`
+  - `codex exec --sandbox workspace-write --skip-git-repo-check -` (prompt on stdin)
   - `pi -e "prompt"`
-  - `claude -p "prompt"`
+  - `claude -p` (adapter adds `--bare`, JSON output, `dontAsk`, and an explicit
+    tool list; needs `ANTHROPIC_API_KEY`)
 
 If a configured external executable is missing, the selected role fails with
 an actionable error. The harness does not silently fall back to another agent.
@@ -1136,7 +1137,10 @@ and stays stable while an agent iterates. This ordering maximizes provider
 KV-cache reuse (measured: 99.6% cached tokens, −81% cost per call on a pinned
 provider via `provider_pin`). Nothing dynamic — RAG results, tool outputs,
 user requests — enters the system prompt; those live in message history where
-all but the newest 12 tool results are elided automatically.
+older tool results are elided automatically. The harness-maintained
+`[HARNESS READ INDEX]` and `[HARNESS BUILD INDEX]` messages are appended at the
+prompt tail, after history and before the iteration status; they are never
+written into stored history or the static cache prefix.
 
 See `WORKING_DOCUMENTATION.md` §4 for the full developer-level contract
 (skill resolution rules, artifact path resolution, maintainer rules).
